@@ -2,7 +2,7 @@
     "name": "aimer/sspfx",
     "description": "MVC FrameWork Base composer",
     "type": "project",
-    "license": "GPL-V3",
+    "license": "MIT",
     "authors": [
         {
             "name": "aimerforreimu",
