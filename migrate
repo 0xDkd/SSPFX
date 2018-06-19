@@ -1,0 +1,45 @@
+#!/usr/bin/env php
+<?php
+require_once 'vendor/autoload.php';
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Migrations\Configuration\Configuration;
+use Doctrine\DBAL\Migrations\Tools\Console\ConsoleRunner;
+use Doctrine\DBAL\Migrations\Tools\Console\Helper\ConfigurationHelper;
+use Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper;
+use Symfony\Component\Console\Helper\HelperSet;
+use Symfony\Component\Console\Helper\QuestionHelper;
+// 读取数据库配置信息
+$db_config = include 'config/db.php';
+$db_params = [
+    'driver' => 'pdo_mysql',
+    'host' => $db_config['host'],
+    'port' => $db_config['port'],
+    'dbname' => $db_config['database'],
+    'user' => $db_config['user'],
+    'password' => $db_config['password'],
+];
+try {
+    $connection = DriverManager::getConnection($db_params);
+} catch (DBALException $e) {
+    echo $e->getMessage() . PHP_EOL;
+    exit;
+}
+// 迁移组件配置
+$configuration = new Configuration($connection);
+$configuration->setName('Doctrine Migrations');
+$configuration->setMigrationsNamespace('db\migrations');
+$configuration->setMigrationsTableName('migration_versions');
+$configuration->setMigrationsDirectory('db/migrations');
+// 创建命令脚本
+$helper_set = new HelperSet([
+    'question' => new QuestionHelper(),
+    'db' => new ConnectionHelper($connection),
+    new ConfigurationHelper($connection, $configuration),
+]);
+$cli = ConsoleRunner::createApplication($helper_set);
+try {
+    $cli->run();
+} catch (Exception $e) {
+    echo $e->getMessage() . PHP_EOL;
+}
